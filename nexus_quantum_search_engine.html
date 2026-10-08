@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS // Quantum Intelligence Engine</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: '#00f3ff',
+              magenta: '#ff007f',
+              purple: '#8a2be2',
+              gold: '#ffd700',
+              darkbg: '#05070f',
+              cardbg: 'rgba(13, 18, 36, 0.65)',
+              border: 'rgba(0, 243, 255, 0.18)'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          animation: {
+            'pulse-glow': 'pulseGlow 3s infinite ease-in-out',
+            'scanline': 'scanline 8s linear infinite',
+            'float': 'float 6s ease-in-out infinite'
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 15px rgba(0,243,255,0.2), inset 0 0 15px rgba(0,243,255,0.1)' },
+              '50%': { boxShadow: '0 0 30px rgba(0,243,255,0.5), inset 0 0 20px rgba(0,243,255,0.25)' }
+            },
+            scanline: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(1000%)' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #05070f;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Custom Glassmorphism */
+    .glass-panel {
+      background: rgba(11, 15, 30, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 243, 255, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .glass-panel-interactive {
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-panel-interactive:hover {
+      border-color: rgba(0, 243, 255, 0.4);
+      box-shadow: 0 10px 30px -5px rgba(0, 243, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(5, 7, 15, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 243, 255, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 243, 255, 0.6);
+    }
+
+    .gradient-text-cyan-purple {
+      background: linear-gradient(135deg, #00f3ff 0%, #b537f2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gradient-text-gold {
+      background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Holographic Border Glow */
+    .holo-glow {
+      position: relative;
+    }
+    .holo-glow::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(90deg, #00f3ff, #ff007f, #8a2be2, #00f3ff);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0.3;
+      transition: opacity 0.3s ease;
+      background-size: 300% 100%;
+      animation: holoShift 6s linear infinite;
+    }
+    .holo-glow:hover::after {
+      opacity: 0.8;
+    }
+
+    @keyframes holoShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+  <!-- Interactive Canvas Background -->
+  <canvas id="neuralCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- Ambient Glow Blobs -->
+  <div class="fixed top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-cyan-600/10 blur-[120px] pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none z-0"></div>
+
+  <header class="relative z-20 border-b border-cyan-500/10 glass-panel sticky top-0 px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Logo -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="resetToHome()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-magenta-500 p-[1px] flex items-center justify-center shadow-[0_0_15px_rgba(0,243,255,0.4)]">
+          <div class="w-full h-full bg-brand-darkbg rounded-[11px] flex items-center justify-center">
+            <i class="fa-solid font-mono text-cyan-400 font-bold text-lg">N</i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold tracking-widest text-lg gradient-text-cyan-purple font-mono">NEXUS</span>
+            <span class="px-1.5 py-0.5 text-[10px] font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">v4.0 quantum</span>
+          </div>
+          <p class="text-[10px] text-gray-400 font-mono tracking-wider">NEURAL SEARCH MATRIX</p>
+        </div>
+      </div>
+
+      <!-- Quick Mode Indicators -->
+      <div class="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-cyan-500/20 text-xs font-mono">
+        <button onclick="setEngineMode('smart')" id="mode-btn-smart" class="engine-mode-btn px-3 py-1.5 rounded-lg text-cyan-400 bg-cyan-500/20 border border-cyan-500/40 transition">
+          <i class="fa-solid fa-brain mr-1.5"></i>Quantum AI
+        </button>
+        <button onclick="setEngineMode('deep')" id="mode-btn-deep" class="engine-mode-btn px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-network-wired mr-1.5"></i>Deep Web
+        </button>
+        <button onclick="setEngineMode('code')" id="mode-btn-code" class="engine-mode-btn px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-code mr-1.5"></i>Code Node
+        </button>
+        <button onclick="setEngineMode('media')" id="mode-btn-media" class="engine-mode-btn px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-cube mr-1.5"></i>Visual Matrix
+        </button>
+      </div>
+
+      <!-- Right Header Controls -->
+      <div class="flex items-center gap-3">
+        <button onclick="toggleCommandPalette()" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-500/5 hover:bg-cyan-500/15 border border-cyan-500/20 text-xs font-mono text-cyan-300 transition">
+          <i class="fa-solid fa-terminal text-cyan-400"></i>
+          <span>Cmd Bar</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-cyan-950 text-[10px] border border-cyan-500/30 text-cyan-400">Ctrl K</kbd>
+        </button>
+
+        <button onclick="toggleBookmarkDrawer()" class="relative p-2.5 rounded-xl bg-slate-900/80 hover:bg-cyan-500/10 border border-cyan-500/20 text-gray-300 hover:text-cyan-400 transition">
+          <i class="fa-solid fa-bookmark text-sm"></i>
+          <span id="bookmark-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 rounded-full bg-magenta-500 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+        </button>
+
+        <button onclick="toggleHistoryDrawer()" class="p-2.5 rounded-xl bg-slate-900/80 hover:bg-cyan-500/10 border border-cyan-500/20 text-gray-300 hover:text-cyan-400 transition" title="Search History">
+          <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+        </button>
+
+        <div class="h-6 w-[1px] bg-cyan-500/20 mx-1 hidden sm:block"></div>
+
+        <!-- User Status Badge -->
+        <div class="flex items-center gap-2 pl-1">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono text-xs">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10 flex-grow max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 flex flex-col">
+
+    <!-- HOME / HERO STATE -->
+    <div id="hero-section" class="my-auto py-12 flex flex-col items-center justify-center text-center transition-all duration-500">
+      
+      <!-- Glowing Badge -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono mb-6 animate-pulse-glow">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>NEURAL ENGINE v4.2 ONLINE • 1.4B NODES INDEXED</span>
+      </div>
+
+      <!-- Main Title -->
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4">
+        Search Beyond <span class="gradient-text-cyan-purple">Reality</span>
+      </h1>
+      <p class="text-gray-400 text-sm md:text-base max-w-2xl mb-10 font-light">
+        Next-generation quantum AI synthesizer parsing the hyper-dimensional web, real-time telemetry, live code repositories, and high-frequency knowledge vectors.
+      </p>
+
+      <!-- Central Search Box Container -->
+      <div class="w-full max-w-3xl relative mb-6">
+        <div class="holo-glow rounded-2xl">
+          <div class="glass-panel rounded-2xl p-2 md:p-3 flex items-center gap-3 relative z-10 focus-within:border-cyan-400 transition-all shadow-[0_0_40px_rgba(0,243,255,0.15)]">
+            
+            <i class="fa-solid fa-magnifying-glass text-cyan-400 text-xl pl-3"></i>
+
+            <input type="text" id="main-search-input" 
+                   placeholder="Search AI, Quantum Computing, SpaceX, Next.js or ask any complex question..." 
+                   class="w-full bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-sm md:text-base font-medium py-2"
+                   onkeydown="handleSearchKeydown(event)"
+                   oninput="handleInputAutocomplete(event)"
+                   autocomplete="off">
+
+            <!-- Clear Button -->
+            <button id="clear-btn" onclick="clearSearchInput()" class="hidden text-gray-400 hover:text-white p-2">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Voice Search Button -->
+            <button onclick="triggerVoiceSearch()" class="p-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 transition" title="Voice Neural Query">
+              <i class="fa-solid fa-microphone text-base"></i>
+            </button>
+
+            <!-- Execute Search Button -->
+            <button onclick="executeSearch()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-black font-bold hover:brightness-110 shadow-[0_0_20px_rgba(0,243,255,0.4)] transition flex items-center gap-2">
+              <span>Execute</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Autocomplete Suggestions Dropdown -->
+        <div id="autocomplete-dropdown" class="hidden absolute left-0 right-0 top-full mt-2 glass-panel rounded-xl border border-cyan-500/30 p-2 z-50 shadow-2xl text-left">
+          <div id="autocomplete-list" class="space-y-1"></div>
+        </div>
+      </div>
+
+      <!-- Quick Suggestion Pills -->
+      <div class="flex flex-wrap justify-center gap-2 text-xs font-mono text-gray-400">
+        <span class="py-1 text-gray-500">Popular Vectors:</span>
+        <button onclick="quickSearch('Artificial Intelligence')" class="px-3 py-1 rounded-full bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-300 transition"># Artificial Intelligence</button>
+        <button onclick="quickSearch('Quantum Computing')" class="px-3 py-1 rounded-full bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-300 transition"># Quantum Computing</button>
+        <button onclick="quickSearch('Next.js 15')" class="px-3 py-1 rounded-full bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-300 transition"># Next.js 15</button>
+        <button onclick="quickSearch('Cyberpunk Design')" class="px-3 py-1 rounded-full bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-300 transition"># Cyberpunk Design</button>
+        <button onclick="quickSearch('SpaceX Mars')" class="px-3 py-1 rounded-full bg-cyan-950/40 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-300 transition"># SpaceX Mars</button>
+      </div>
+
+      <!-- System Telemetry Widget -->
+      <div class="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl font-mono text-left">
+        <div class="glass-panel p-4 rounded-xl border-cyan-500/10">
+          <p class="text-[10px] text-gray-500 uppercase">Search Latency</p>
+          <p class="text-lg font-bold text-cyan-400 mt-1">0.0032 ms</p>
+          <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-solid fa-bolt mr-1"></i>Quantum Accelerated</p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border-cyan-500/10">
+          <p class="text-[10px] text-gray-500 uppercase">Neural Accuracy</p>
+          <p class="text-lg font-bold text-magenta-400 mt-1">99.84%</p>
+          <p class="text-[10px] text-purple-400 mt-1"><i class="fa-solid fa-shield-halved mr-1"></i>Cross-Validated</p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border-cyan-500/10">
+          <p class="text-[10px] text-gray-500 uppercase">Active Index</p>
+          <p class="text-lg font-bold text-purple-400 mt-1">1.48 B</p>
+          <p class="text-[10px] text-cyan-400 mt-1"><i class="fa-solid fa-database mr-1"></i>Distributed Web</p>
+        </div>
+        <div class="glass-panel p-4 rounded-xl border-cyan-500/10">
+          <p class="text-[10px] text-gray-500 uppercase">Security Protocol</p>
+          <p class="text-lg font-bold text-emerald-400 mt-1">E2E Quantum</p>
+          <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-solid fa-lock mr-1"></i>Zero-Knowledge</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="results-section" class="hidden flex-col w-full transition-all duration-500">
+      
+      <!-- Top Compact Search Bar (When searching) -->
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 py-4 border-b border-cyan-500/10">
+        
+        <div class="w-full md:max-w-2xl relative">
+          <div class="glass-panel rounded-xl p-2 flex items-center gap-2 border border-cyan-500/30">
+            <i class="fa-solid fa-magnifying-glass text-cyan-400 pl-2"></i>
+            <input type="text" id="compact-search-input" class="w-full bg-transparent border-none text-white text-sm focus:outline-none" onkeydown="handleCompactSearchKeydown(event)">
+            <button onclick="executeSearchFromCompact()" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-black font-bold text-xs hover:bg-cyan-400 transition">
+              Update
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter / Tab Navigation Buttons -->
+        <div class="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 font-mono text-xs">
+          <button onclick="switchCategory('all')" id="cat-all" class="cat-btn active px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+            <i class="fa-solid fa-globe mr-1.5"></i>All Matrix
+          </button>
+          <button onclick="switchCategory('web')" id="cat-web" class="cat-btn px-3 py-2 rounded-lg hover:bg-cyan-500/10 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-file-lines mr-1.5"></i>Web Nodes
+          </button>
+          <button onclick="switchCategory('ai')" id="cat-ai" class="cat-btn px-3 py-2 rounded-lg hover:bg-cyan-500/10 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i>AI Synthesis
+          </button>
+          <button onclick="switchCategory('images')" id="cat-images" class="cat-btn px-3 py-2 rounded-lg hover:bg-cyan-500/10 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-images mr-1.5"></i>Media Grid
+          </button>
+          <button onclick="switchCategory('code')" id="cat-code" class="cat-btn px-3 py-2 rounded-lg hover:bg-cyan-500/10 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-code mr-1.5"></i>Code Snippets
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-time Loading Skeleton / Parsing Animation -->
+      <div id="search-loading" class="hidden py-12 flex-col items-center justify-center text-center font-mono">
+        <div class="w-16 h-16 relative flex items-center justify-center mb-4">
+          <div class="absolute inset-0 rounded-full border-2 border-cyan-500/20 animate-ping"></div>
+          <div class="w-12 h-12 rounded-full border-2 border-t-cyan-400 border-r-purple-500 border-b-magenta-500 border-l-transparent animate-spin"></div>
+        </div>
+        <p id="loading-status" class="text-sm text-cyan-400 font-semibold tracking-wider">PARSING NEURAL VECTORS...</p>
+        <p class="text-xs text-gray-500 mt-1">Cross-referencing global telemetry streams</p>
+      </div>
+
+      <div id="results-content" class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-6">
+        
+        <!-- Left Main Results Column (8 cols on desktop) -->
+        <div class="lg:col-span-8 space-y-6">
+          
+          <!-- AI Synthesis Top Card -->
+          <div id="ai-summary-card" class="glass-panel p-6 rounded-2xl border-cyan-500/40 relative overflow-hidden shadow-[0_0_30px_rgba(0,243,255,0.08)]">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between border-b border-cyan-500/10 pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                <h3 class="font-bold text-cyan-300 font-mono text-sm tracking-wide flex items-center gap-2">
+                  <i class="fa-solid fa-brain"></i> QUANTUM AI SYNTHESIS
+                </h3>
+              </div>
+              <span id="ai-confidence" class="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-mono">Confidence 99.8%</span>
+            </div>
+
+            <p id="ai-summary-text" class="text-gray-200 text-sm leading-relaxed mb-4">
+              Generating quantum response...
+            </p>
+
+            <div id="ai-key-takeaways" class="bg-slate-950/50 rounded-xl p-4 border border-cyan-500/10 space-y-2">
+              <p class="text-xs font-mono text-cyan-400 uppercase tracking-wider font-semibold">Key Quantum Takeaways:</p>
+              <ul id="takeaway-list" class="space-y-1.5 text-xs text-gray-300 list-disc list-inside">
+                <!-- Dynamic bullets -->
+              </ul>
+            </div>
+
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-cyan-500/10 text-xs text-gray-400 font-mono">
+              <div class="flex items-center gap-3">
+                <button onclick="copyAISummary()" class="hover:text-cyan-400 transition flex items-center gap-1"><i class="fa-regular fa-copy"></i> Copy Synthesis</button>
+                <button onclick="speakAISummary()" class="hover:text-cyan-400 transition flex items-center gap-1"><i class="fa-solid fa-volume-high"></i> Listen</button>
+              </div>
+              <span class="text-[10px] text-gray-500">Synthesized in 0.0028s</span>
+            </div>
+          </div>
+
+          <!-- Web Search Results Container -->
+          <div id="web-results-container" class="space-y-4">
+            <!-- Dynamic Web Result Cards populated via JS -->
+          </div>
+
+          <!-- Images Grid Container (Hidden by default, visible on tab selection or all) -->
+          <div id="images-results-container" class="hidden space-y-3">
+            <h4 class="font-mono text-xs text-cyan-400 uppercase tracking-wider font-semibold">Visual Matrix Telemetry</h4>
+            <div id="images-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <!-- Dynamic Images -->
+            </div>
+          </div>
+
+          <!-- Code Snippets Container -->
+          <div id="code-results-container" class="hidden space-y-4">
+            <h4 class="font-mono text-xs text-cyan-400 uppercase tracking-wider font-semibold">Code Repositories & Execution Blocks</h4>
+            <div id="code-snippets-list" class="space-y-4">
+              <!-- Dynamic Code Snippets -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Knowledge Sidebar (4 cols on desktop) -->
+        <div class="lg:col-span-4 space-y-6">
+          
+          <!-- Entity Knowledge Card -->
+          <div id="knowledge-panel" class="glass-panel p-5 rounded-2xl border-cyan-500/20 relative">
+            <div class="flex items-center gap-3 mb-4">
+              <div id="kp-icon" class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl font-bold">
+                <i class="fa-solid fa-atom"></i>
+              </div>
+              <div>
+                <h3 id="kp-title" class="font-bold text-white text-base">Knowledge Entity</h3>
+                <p id="kp-subtitle" class="text-xs text-cyan-400 font-mono">Neural Classification</p>
+              </div>
+            </div>
+
+            <p id="kp-description" class="text-xs text-gray-300 leading-relaxed mb-4">
+              Entity telemetry dynamic data...
+            </p>
+
+            <!-- Key Specs List -->
+            <div id="kp-stats" class="space-y-2 border-t border-cyan-500/10 pt-3 text-xs font-mono">
+              <!-- Dynamic key value specs -->
+            </div>
+
+            <!-- Related Entity Graph Nodes -->
+            <div class="mt-4 pt-3 border-t border-cyan-500/10">
+              <p class="text-[11px] font-mono text-gray-400 mb-2">Connected Knowledge Nodes:</p>
+              <div id="kp-nodes" class="flex flex-wrap gap-1.5">
+                <!-- Node Tags -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Trend Telemetry Card -->
+          <div class="glass-panel p-5 rounded-2xl border-cyan-500/20">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="font-mono text-xs text-cyan-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Global Query Telemetry
+              </h4>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            
+            <div class="space-y-3 font-mono text-xs">
+              <div class="flex justify-between items-center pb-2 border-b border-cyan-500/10">
+                <span class="text-gray-300">#1 Quantum Computing</span>
+                <span class="text-emerald-400">+184%</span>
+              </div>
+              <div class="flex justify-between items-center pb-2 border-b border-cyan-500/10">
+                <span class="text-gray-300">#2 Neural Link Interface</span>
+                <span class="text-emerald-400">+92%</span>
+              </div>
+              <div class="flex justify-between items-center pb-2 border-b border-cyan-500/10">
+                <span class="text-gray-300">#3 Next.js App Router</span>
+                <span class="text-emerald-400">+64%</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-300">#4 Fusion Energy Grid</span>
+                <span class="text-emerald-400">+41%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+
+  <!-- Voice Search Interactive Modal -->
+  <div id="voice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+    <div class="glass-panel p-8 rounded-3xl max-w-md w-full text-center border-cyan-500/40 relative">
+      <button onclick="closeVoiceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 text-3xl animate-pulse">
+        <i class="fa-solid fa-microphone"></i>
+      </div>
+
+      <h3 class="text-xl font-bold text-white mb-2">Listening Neural Stream...</h3>
+      <p id="voice-transcript" class="text-sm font-mono text-cyan-400 mb-6 italic">"Say something like Artificial Intelligence..."</p>
+
+      <!-- Animated Soundwave Equalizer -->
+      <div class="flex items-center justify-center gap-1.5 h-10 mb-6">
+        <div class="w-1.5 bg-cyan-400 rounded-full h-8 animate-bounce" style="animation-delay: 0.1s"></div>
+        <div class="w-1.5 bg-purple-500 rounded-full h-10 animate-bounce" style="animation-delay: 0.2s"></div>
+        <div class="w-1.5 bg-magenta-500 rounded-full h-6 animate-bounce" style="animation-delay: 0.3s"></div>
+        <div class="w-1.5 bg-cyan-400 rounded-full h-10 animate-bounce" style="animation-delay: 0.4s"></div>
+        <div class="w-1.5 bg-emerald-400 rounded-full h-4 animate-bounce" style="animation-delay: 0.2s"></div>
+      </div>
+
+      <button onclick="simulateVoiceQueryReceived()" class="w-full py-2.5 rounded-xl bg-cyan-500 text-black font-bold font-mono text-xs hover:bg-cyan-400 transition">
+        Simulate Audio Capture
+      </button>
+    </div>
+  </div>
+
+  <!-- Command Palette Modal (Ctrl + K) -->
+  <div id="cmd-palette-modal" class="hidden fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel max-w-2xl w-full mx-4 rounded-2xl border-cyan-500/40 overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-cyan-500/20 flex items-center gap-3">
+        <i class="fa-solid fa-terminal text-cyan-400 text-lg"></i>
+        <input type="text" id="cmd-input" placeholder="Type a command or jump to query..." class="w-full bg-transparent border-none text-white focus:outline-none font-mono text-sm" onkeydown="handleCmdKeydown(event)">
+        <kbd class="px-2 py-1 rounded bg-slate-800 text-gray-400 font-mono text-xs">ESC</kbd>
+      </div>
+
+      <div class="p-3 max-h-80 overflow-y-auto space-y-1 font-mono text-xs">
+        <div onclick="cmdExecute('search-ai')" class="p-2.5 rounded-lg hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 cursor-pointer flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-brain text-cyan-400"></i> Run AI Deep Synthesis Query</span>
+          <span class="text-gray-500">Cmd 1</span>
+        </div>
+        <div onclick="cmdExecute('mode-code')" class="p-2.5 rounded-lg hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 cursor-pointer flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-code text-purple-400"></i> Switch to Code Developer Mode</span>
+          <span class="text-gray-500">Cmd 2</span>
+        </div>
+        <div onclick="cmdExecute('clear-bookmarks')" class="p-2.5 rounded-lg hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 cursor-pointer flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-trash text-magenta-400"></i> Clear All Saved Bookmarks</span>
+          <span class="text-gray-500">Cmd 3</span>
+        </div>
+        <div onclick="cmdExecute('system-reset')" class="p-2.5 rounded-lg hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 cursor-pointer flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-arrows-rotate text-emerald-400"></i> Return to Quantum Home</span>
+          <span class="text-gray-500">Cmd 4</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instant Result Dynamic Live Preview Modal -->
+  <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-panel w-full max-w-4xl h-[80vh] rounded-2xl border-cyan-500/40 flex flex-col overflow-hidden shadow-2xl">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-cyan-500/20 flex items-center justify-between bg-slate-950/60">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+          <span id="preview-modal-title" class="font-bold text-white text-sm font-mono truncate max-w-md">Live Node Preview</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a id="preview-modal-link" href="#" target="_blank" class="px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-xs font-mono">
+            Open Web Node <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+          </a>
+          <button onclick="closePreviewModal()" class="text-gray-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Body Container -->
+      <div class="flex-grow p-6 overflow-y-auto bg-slate-950/40 text-gray-300 font-sans space-y-4">
+        <div class="flex items-center gap-2 text-xs font-mono text-cyan-400">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>QUANTUM PREVIEW BUFFER • ZERO TRACKERS DETECTED</span>
+        </div>
+        <h2 id="preview-body-heading" class="text-2xl font-bold text-white">Result Title Preview</h2>
+        <p id="preview-body-text" class="text-sm leading-relaxed text-gray-300">
+          Full content snippet visualization rendered directly through the proxy reader mode...
+        </p>
+        <div class="p-4 rounded-xl bg-slate-900 border border-cyan-500/20 font-mono text-xs text-cyan-300 space-y-2">
+          <p class="font-bold text-white">Telemetry Snapshot:</p>
+          <p>Status: 200 OK (Quantum Mirror Active)</p>
+          <p>Encryption: SHA-256 Verified</p>
+          <p>Host Region: US-EAST Neural Cluster</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookmarks Drawer Slide-Over -->
+  <div id="bookmark-drawer" class="hidden fixed inset-y-0 right-0 z-50 w-full max-w-sm glass-panel border-l border-cyan-500/30 p-6 flex flex-col shadow-2xl transition-all">
+    <div class="flex items-center justify-between pb-4 border-b border-cyan-500/20">
+      <h3 class="font-bold text-white font-mono text-sm flex items-center gap-2">
+        <i class="fa-solid fa-bookmark text-cyan-400"></i> SAVED QUANTUM NODES
+      </h3>
+      <button onclick="toggleBookmarkDrawer()" class="text-gray-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div id="bookmark-list" class="flex-grow overflow-y-auto py-4 space-y-3 font-mono text-xs">
+      <p id="no-bookmarks" class="text-gray-500 text-center py-8">No saved vectors yet.</p>
+    </div>
+
+    <div class="pt-4 border-t border-cyan-500/20 flex justify-between items-center text-xs font-mono">
+      <button onclick="clearAllBookmarks()" class="text-red-400 hover:underline">Clear All</button>
+      <span class="text-gray-500" id="bookmark-count-text">0 saved items</span>
+    </div>
+  </div>
+
+  <!-- Search History Drawer -->
+  <div id="history-drawer" class="hidden fixed inset-y-0 right-0 z-50 w-full max-w-sm glass-panel border-l border-cyan-500/30 p-6 flex flex-col shadow-2xl transition-all">
+    <div class="flex items-center justify-between pb-4 border-b border-cyan-500/20">
+      <h3 class="font-bold text-white font-mono text-sm flex items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> QUERY TIMELINE
+      </h3>
+      <button onclick="toggleHistoryDrawer()" class="text-gray-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <div id="history-list" class="flex-grow overflow-y-auto py-4 space-y-2 font-mono text-xs">
+      <!-- Dynamic history items -->
+    </div>
+
+    <div class="pt-4 border-t border-cyan-500/20 flex justify-between items-center text-xs font-mono">
+      <button onclick="clearSearchHistory()" class="text-red-400 hover:underline">Clear History</button>
+      <span class="text-gray-500">Session Saved</span>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-cyan-500/10 py-4 px-8 glass-panel mt-auto text-xs font-mono text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+    <div>
+      <span>NEXUS // QUANTUM ENGINE &copy; 2026. ALL RIGHTS RESERVED.</span>
+    </div>
+    <div class="flex gap-4">
+      <a href="#" class="hover:text-cyan-400 transition">Quantum Protocol</a>
+      <a href="#" class="hover:text-cyan-400 transition">Telemetry</a>
+      <a href="#" class="hover:text-cyan-400 transition">API Node</a>
+    </div>
+  </footer>
+
+  <script>
+    /* ==========================================================================
+       1. DATA MATRIX & MOCK INTELLIGENCE DATABASE
+       ========================================================================== */
+    const KNOWLEDGE_DATABASE = {
+      "artificial intelligence": {
+        title: "Artificial Intelligence Matrix",
+        subtitle: "AGI & Deep Neural Architecture",
+        description: "Artificial Intelligence refers to computer systems engineered to perform complex tasks typically requiring human cognitive intelligence, including pattern learning, spatial reasoning, and dynamic synthesis.",
+        confidence: "99.92%",
+        summary: "Artificial Intelligence has transitioned into transformer-scale neural networks capable of autonomous reasoning, multivariable code synthesis, and multi-modal sensory comprehension across quantum grids.",
+        takeaways: [
+          "Large Multi-modal Models (LMMs) drive real-time predictive tasks.",
+          "Autonomous agent swarms manage decentralized compute workloads.",
+          "Quantum-inspired transformer architectures minimize memory overhead by 80%."
+        ],
+        stats: [
+          { label: "Global Node Adoption", val: "94.2%" },
+          { label: "Active Model Scale", val: "100 Trillion Params" },
+          { label: "Compute Efficiency", val: "3.2 FLOPS/Watt" }
+        ],
+        nodes: ["AGI", "Neural Networks", "Transformer Architecture", "Reinforcement Learning"],
+        webResults: [
+          {
+            title: "OpenAI & Next-Gen Neural Frameworks 2026",
+            url: "https://openai.com/research/neural-matrix",
+            snippet: "Exploring high-dimensional cognitive synthesis and zero-shot reasoning architectures across distributed edge servers.",
+            badge: "FEATURED NODE"
+          },
+          {
+            title: "MIT Computer Science: Deep Learning Foundations",
+            url: "https://csail.mit.edu/ai-foundations",
+            snippet: "Comprehensive breakdown of backpropagation algorithms, attention mechanisms, and neural vector optimization.",
+            badge: "ACADEMIC"
+          },
+          {
+            title: "NVIDIA Quantum AI Edge Acceleration Specs",
+            url: "https://developer.nvidia.com/quantum-ai",
+            snippet: "Hardware benchmarks detailing 100x acceleration using tensor-core optical processing nodes.",
+            badge: "BENCHMARK"
+          }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop"
+        ],
+        codeSnippet: {
+          lang: "python",
+          code: `# Quantum-Inspired Attention Engine\nimport torch\nimport torch.nn as nn\n\nclass QuantumAttention(nn.Module):\n    def __init__(self, dim=1024, heads=16):\n        super().__init__()\n        self.qkv = nn.Linear(dim, dim * 3)\n        self.scale = (dim // heads) ** -0.5\n        \n    def forward(self, x):\n        q, k, v = self.qkv(x).chunk(3, dim=-1)\n        attn = (q @ k.transpose(-2, -1)) * self.scale\n        return attn.softmax(dim=-1) @ v`
+        }
+      },
+      "quantum computing": {
+        title: "Quantum Computing Grid",
+        subtitle: "Subatomic Information Processing",
+        description: "Quantum computing harnesses subatomic mechanics—such as superposition and quantum entanglement—to process complex mathematical calculations exponentially faster than classical supercomputers.",
+        confidence: "99.85%",
+        summary: "Quantum computing operates on qubits capable of existing in simultaneous 0 and 1 states. Breakthrough topological error-correction now allows million-qubit stable coherence.",
+        takeaways: [
+          "Superposition allows parallel computation across 2^N state spaces.",
+          "Topological qubits achieve 99.99% fault tolerance in cryogenic environments.",
+          "Post-quantum cryptography algorithms now safeguard global financial grids."
+        ],
+        stats: [
+          { label: "Coherence Time", val: "1.2 Milliseconds" },
+          { label: "Active Qubit Count", val: "1,048,576 Qubits" },
+          { label: "Operating Temp", val: "15 Millikelvin" }
+        ],
+        nodes: ["Superposition", "Entanglement", "Qubits", "Cryptographic Decryption"],
+        webResults: [
+          {
+            title: "IBM Quantum System Two: Operational Telemetry",
+            url: "https://ibm.com/quantum/system-two",
+            snippet: "Real-time telemetry from modular quantum processors deployed in enterprise cloud networks worldwide.",
+            badge: "SYSTEM LOG"
+          },
+          {
+            title: "Nature Physics: Fault-Tolerant Quantum Gates",
+            url: "https://nature.com/articles/quantum-coherence-2026",
+            snippet: "Experimental evidence of zero-decoherence quantum logic gates under cryogenic optical trapping.",
+            badge: "PEER REVIEWED"
+          }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600&auto=format&fit=crop"
+        ],
+        codeSnippet: {
+          lang: "qiskit",
+          code: `# Qiskit Quantum Teleportation Circuit\nfrom qiskit import QuantumCircuit, Aer, execute\n\nqc = QuantumCircuit(3, 3)\nqc.h(1) # Create Bell pair\nqc.cx(1, 2)\nqc.cx(0, 1) # Entangle query qubit\nqc.h(0)\nqc.measure([0, 1], [0, 1])\nprint("Quantum State Vector Synchronized.")`
+        }
+      },
+      "next.js 15": {
+        title: "Next.js 15 Engine Framework",
+        subtitle: "React Fullstack Web Architecture",
+        description: "Next.js 15 represents the pinnacle of modern web development, offering zero-bundle Server Components, React Compiler integration, and sub-millisecond edge streaming.",
+        confidence: "99.78%",
+        summary: "Next.js 15 features complete automatic memoization via the React Compiler, enhanced PPR (Partial Prerendering), and instantaneous edge route handlers.",
+        takeaways: [
+          "React Compiler automatically optimizes render re-evaluations.",
+          "Partial Prerendering combines static shell with async dynamic streaming.",
+          "Turbopack yields 10x faster HMR compilations."
+        ],
+        stats: [
+          { label: "HMR Speed", val: "12ms" },
+          { label: "Server Component Bundle", val: "0 KB Client-Side" },
+          { label: "Global Edge Nodes", val: "300+ Regions" }
+        ],
+        nodes: ["React 19", "App Router", "Turbopack", "Partial Prerendering"],
+        webResults: [
+          {
+            title: "Next.js 15 Official Release Documentation",
+            url: "https://nextjs.org/blog/next-15",
+            snippet: "Complete guide to upgrading to Next.js 15, dynamic async request APIs, and optimized caching defaults.",
+            badge: "OFFICIAL DOCS"
+          },
+          {
+            title: "Vercel Edge Platform Performance Metrics",
+            url: "https://vercel.com/blog/edge-next-15",
+            snippet: "Benchmark tests showing 45% reduction in Time-To-First-Byte (TTFB) across global CDN nodes.",
+            badge: "CASE STUDY"
+          }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&auto=format&fit=crop"
+        ],
+        codeSnippet: {
+          lang: "typescript",
+          code: `// Next.js 15 Async Page Component\nimport { Suspense } from 'react';\n\nexport default async function QuantumPage({ params }: { params: Promise<{ id: string }> }) {\n  const { id } = await params;\n  return (\n    <main className="p-8 font-mono text-cyan-400">\n      <h1>Telemetry Node ID: {id}</h1>\n    </main>\n  );\n}`
+        }
+      }
+    };
+
+    /* Default Fallback Generator for Arbitrary Queries */
+    function generateFallbackData(query) {
+      return {
+        title: `${query.toUpperCase()} Vector`,
+        subtitle: "Dynamic Synthesized Node",
+        description: `Automated real-time neural web extraction for query vector '${query}'. Aggregating telemetry across 1.4B distributed web nodes.`,
+        confidence: "98.45%",
+        summary: `The neural matrix synthesized comprehensive telemetry regarding "${query}". Key insights indicate high correlation with emerging digital frameworks, computational efficiency, and decentralized knowledge graphs.`,
+        takeaways: [
+          `Primary vector density detected in technology and research clusters.`,
+          `Semantic analysis highlights high confidence in automated response synthesis.`,
+          `Real-time indexing updated 0.0012 seconds ago.`
+        ],
+        stats: [
+          { label: "Relevance Index", val: "98.7%" },
+          { label: "Parsed Sources", val: "14,290 Pages" },
+          { label: "Data Quality", val: "Tier 1 Verified" }
+        ],
+        nodes: [query, "Knowledge Graph", "Neural Search", "Data Index"],
+        webResults: [
+          {
+            title: `Global Telemetry Report: ${query}`,
+            url: `https://nexus.engine/telemetry/${encodeURIComponent(query)}`,
+            snippet: `Direct synthesis logs and extracted documentation regarding ${query} across authenticated cloud repositories.`,
+            badge: "LIVE SYNTHESIS"
+          },
+          {
+            title: `${query} — Distributed Knowledge Base`,
+            url: `https://wikipedia.org/wiki/${encodeURIComponent(query)}`,
+            snippet: `In-depth technical breakdown, historical origin, and structural classifications related to ${query}.`,
+            badge: "ENCYCLOPEDIA"
+          },
+          {
+            title: `TechCrunch Deep Dive: Future of ${query}`,
+            url: `https://techcrunch.com/tag/${encodeURIComponent(query)}`,
+            snippet: `Industry developments, venture capital investment trends, and technological breakthroughs surrounding ${query}.`,
+            badge: "NEWS MATRIX"
+          }
+        ],
+        images: [
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&auto=format&fit=crop"
+        ],
+        codeSnippet: {
+          lang: "json",
+          code: `{\n  "query": "${query}",\n  "status": "SYNTHESIZED",\n  "timestamp": "${new Date().toISOString()}",\n  "node": "US-EAST-QUANTUM-01"\n}`
+        }
+      };
+    }
+
+    /* State Variables */
+    let currentQuery = "";
+    let activeCategory = "all";
+    let activeEngineMode = "smart";
+    let bookmarks = JSON.parse(localStorage.getItem("nexus_bookmarks") || "[]");
+    let searchHistory = JSON.parse(localStorage.getItem("nexus_history") || "[]");
+
+    /* ==========================================================================
+       2. INTERACTIVE PARTICLES CANVAS BACKGROUND
+       ========================================================================== */
+    const canvas = document.getElementById("neuralCanvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+    let mouse = { x: null, y: null, radius: 150 };
+
+    function initCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      particles = [];
+
+      const count = Math.floor((canvas.width * canvas.height) / 18000);
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: (Math.random() - 0.5) * 0.8,
+          radius: Math.random() * 1.8 + 0.5,
+          color: Math.random() > 0.5 ? '#00f3ff' : '#8a2be2'
+        });
+      }
+    }
+
+    function animateCanvas() {
+      requestAnimationFrame(animateCanvas);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < particles.length; i++) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.fill();
+
+        // Connect nearby particles
+        for (let j = i + 1; j < particles.length; j++) {
+          let p2 = particles[j];
+          let dx = p.x - p2.x;
+          let dy = p.y - p2.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(0, 243, 255, ${0.15 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    window.addEventListener('resize', initCanvas);
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    });
+
+    /* ==========================================================================
+       3. CORE SEARCH LOGIC & CONTROLLER
+       ========================================================================== */
+
+    function executeSearch() {
+      const input = document.getElementById("main-search-input").value.trim();
+      if (!input) return;
+      runQueryProcess(input);
+    }
+
+    function executeSearchFromCompact() {
+      const input = document.getElementById("compact-search-input").value.trim();
+      if (!input) return;
+      document.getElementById("main-search-input").value = input;
+      runQueryProcess(input);
+    }
+
+    function quickSearch(query) {
+      document.getElementById("main-search-input").value = query;
+      runQueryProcess(query);
+    }
+
+    function runQueryProcess(query) {
+      currentQuery = query;
+      hideAutocomplete();
+
+      // Save to History
+      addToHistory(query);
+
+      // Transition Views: Hide Hero, Show Results Container & Loader
+      document.getElementById("hero-section").classList.add("hidden");
+      document.getElementById("results-section").classList.remove("hidden");
+      document.getElementById("compact-search-input").value = query;
+
+      // Show Animated Loader
+      document.getElementById("search-loading").classList.remove("hidden");
+      document.getElementById("results-content").classList.add("hidden");
+
+      // Animated Loading Status Steps
+      const statuses = [
+        "PARSING NEURAL VECTORS...",
+        "SYNTHESIZING AI KNOWLEDGE MATRIX...",
+        "CROSS-INDEXING 1.4B WEB NODES...",
+        "FINALIZING QUANTUM RENDER..."
+      ];
+      let step = 0;
+      const interval = setInterval(() => {
+        step++;
+        if (step < statuses.length) {
+          document.getElementById("loading-status").innerText = statuses[step];
+        } else {
+          clearInterval(interval);
+          renderSearchResults(query);
+        }
+      }, 250);
+    }
+
+    function renderSearchResults(query) {
+      // Hide loader, show content
+      document.getElementById("search-loading").classList.add("hidden");
+      document.getElementById("results-content").classList.remove("hidden");
+
+      // Lookup or Generate Mock Data
+      const key = query.toLowerCase();
+      const data = KNOWLEDGE_DATABASE[key] || generateFallbackData(query);
+
+      // 1. Render AI Summary Card
+      document.getElementById("ai-confidence").innerText = `Confidence ${data.confidence}`;
+      document.getElementById("ai-summary-text").innerText = data.summary;
+      const takeawayList = document.getElementById("takeaway-list");
+      takeawayList.innerHTML = data.takeaways.map(t => `<li>${t}</li>`).join("");
+
+      // 2. Render Web Search Results
+      const webContainer = document.getElementById("web-results-container");
+      webContainer.innerHTML = data.webResults.map((res, idx) => `
+        <div class="glass-panel glass-panel-interactive p-5 rounded-2xl relative">
+          <div class="flex items-center justify-between mb-1 text-xs font-mono">
+            <span class="text-cyan-400 font-semibold truncate max-w-xs">${res.url}</span>
+            <span class="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px]">${res.badge}</span>
+          </div>
+          <h3 class="text-lg font-bold text-white hover:text-cyan-400 transition cursor-pointer mb-2" onclick="openPreviewModal('${res.title}', '${res.snippet}', '${res.url}')">
+            ${res.title}
+          </h3>
+          <p class="text-xs text-gray-300 leading-relaxed mb-4">${res.snippet}</p>
+          <div class="flex items-center gap-3 text-xs font-mono">
+            <button onclick="openPreviewModal('${res.title}', '${res.snippet}', '${res.url}')" class="px-3 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-eye text-[10px]"></i> Quick View
+            </button>
+            <button onclick="saveBookmark('${res.title}', '${res.url}')" class="text-gray-400 hover:text-cyan-400 transition flex items-center gap-1">
+              <i class="fa-regular fa-bookmark"></i> Bookmark
+            </button>
+            <button onclick="copyToClipboard('${res.url}')" class="text-gray-400 hover:text-cyan-400 transition flex items-center gap-1">
+              <i class="fa-regular fa-copy"></i> Copy Node Link
+            </button>
+          </div>
+        </div>
+      `).join("");
+
+      // 3. Render Images Matrix Grid
+      const imagesGrid = document.getElementById("images-grid");
+      imagesGrid.innerHTML = data.images.map(imgUrl => `
+        <div class="relative group rounded-xl overflow-hidden border border-cyan-500/20 aspect-video glass-panel cursor-pointer" onclick="openImageLightbox('${imgUrl}')">
+          <img src="${imgUrl}" alt="Visual Matrix" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-3">
+            <span class="text-[10px] font-mono text-cyan-300"><i class="fa-solid fa-expand mr-1"></i> Expand Telemetry</span>
+          </div>
+        </div>
+      `).join("");
+
+      // 4. Render Code Snippets
+      const codeList = document.getElementById("code-snippets-list");
+      codeList.innerHTML = `
+        <div class="glass-panel p-4 rounded-xl border-cyan-500/30 font-mono text-xs relative">
+          <div class="flex items-center justify-between pb-2 mb-3 border-b border-cyan-500/20">
+            <span class="text-cyan-400 uppercase font-bold"><i class="fa-solid fa-code mr-1.5"></i> ${data.codeSnippet.lang} Execution Block</span>
+            <button onclick="copyCodeSnippet()" class="px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[10px]">
+              <i class="fa-regular fa-copy mr-1"></i> Copy Code
+            </button>
+          </div>
+          <pre id="code-snippet-body" class="p-4 rounded-lg bg-slate-950 text-emerald-400 overflow-x-auto leading-relaxed"><code>${escapeHTML(data.codeSnippet.code)}</code></pre>
+        </div>
+      `;
+
+      // 5. Render Knowledge Sidebar Panel
+      document.getElementById("kp-title").innerText = data.title;
+      document.getElementById("kp-subtitle").innerText = data.subtitle;
+      document.getElementById("kp-description").innerText = data.description;
+      
+      const kpStats = document.getElementById("kp-stats");
+      kpStats.innerHTML = data.stats.map(s => `
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">${s.label}:</span>
+          <span class="text-cyan-400 font-bold">${s.val}</span>
+        </div>
+      `).join("");
+
+      const kpNodes = document.getElementById("kp-nodes");
+      kpNodes.innerHTML = data.nodes.map(n => `
+        <button onclick="quickSearch('${n}')" class="px-2.5 py-1 rounded-md bg-cyan-950/60 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[10px] transition">
+          # ${n}
+        </button>
+      `).join("");
+
+      // Reset to category all
+      switchCategory(activeCategory);
+    }
+
+    /* ==========================================================================
+       4. UI INTERACTION HELPERS (Categories, Autocomplete, Drawers, Voice)
+       ========================================================================== */
+
+    function switchCategory(cat) {
+      activeCategory = cat;
+      
+      // Update Tab Buttons UI
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.classList.remove("bg-cyan-500/20", "text-cyan-300", "border", "border-cyan-500/40");
+        btn.classList.add("text-gray-400");
+      });
+      const activeBtn = document.getElementById(`cat-${cat}`);
+      if (activeBtn) {
+        activeBtn.classList.add("bg-cyan-500/20", "text-cyan-300", "border", "border-cyan-500/40");
+        activeBtn.classList.remove("text-gray-400");
+      }
+
+      // Toggle Content Visibility Based on Tab
+      const web = document.getElementById("web-results-container");
+      const images = document.getElementById("images-results-container");
+      const code = document.getElementById("code-results-container");
+      const aiCard = document.getElementById("ai-summary-card");
+
+      if (cat === "all") {
+        web.classList.remove("hidden");
+        images.classList.remove("hidden");
+        code.classList.remove("hidden");
+        aiCard.classList.remove("hidden");
+      } else if (cat === "web") {
+        web.classList.remove("hidden");
+        images.classList.add("hidden");
+        code.classList.add("hidden");
+        aiCard.classList.add("hidden");
+      } else if (cat === "ai") {
+        web.classList.add("hidden");
+        images.classList.add("hidden");
+        code.classList.add("hidden");
+        aiCard.classList.remove("hidden");
+      } else if (cat === "images") {
+        web.classList.add("hidden");
+        images.classList.remove("hidden");
+        code.classList.add("hidden");
+        aiCard.classList.add("hidden");
+      } else if (cat === "code") {
+        web.classList.add("hidden");
+        images.classList.add("hidden");
+        code.classList.remove("hidden");
+        aiCard.classList.add("hidden");
+      }
+    }
+
+    function setEngineMode(mode) {
+      activeEngineMode = mode;
+      document.querySelectorAll(".engine-mode-btn").forEach(btn => {
+        btn.classList.remove("bg-cyan-500/20", "text-cyan-400", "border", "border-cyan-500/40");
+        btn.classList.add("text-gray-400");
+      });
+      const btn = document.getElementById(`mode-btn-${mode}`);
+      if (btn) {
+        btn.classList.add("bg-cyan-500/20", "text-cyan-400", "border", "border-cyan-500/40");
+        btn.classList.remove("text-gray-400");
+      }
+      showToast(`Switched to ${mode.toUpperCase()} Engine Mode`);
+    }
+
+    function handleInputAutocomplete(e) {
+      const val = e.target.value.trim().toLowerCase();
+      const clearBtn = document.getElementById("clear-btn");
+      if (val) clearBtn.classList.remove("hidden");
+      else clearBtn.classList.add("hidden");
+
+      if (val.length < 2) {
+        hideAutocomplete();
+        return;
+      }
+
+      const suggestions = [
+        "Artificial Intelligence", "Quantum Computing", "Next.js 15", 
+        "Cyberpunk Design", "SpaceX Mars", "Web3 Decentralized Grid", 
+        "Neural Engine Benchmarks", "Topological Qubits"
+      ].filter(s => s.toLowerCase().includes(val));
+
+      if (suggestions.length > 0) {
+        const list = document.getElementById("autocomplete-list");
+        list.innerHTML = suggestions.map(s => `
+          <div onclick="quickSearch('${s}')" class="p-2 rounded-lg hover:bg-cyan-500/10 text-xs font-mono text-cyan-300 cursor-pointer flex items-center justify-between">
+            <span><i class="fa-solid fa-magnifying-glass text-cyan-500/60 mr-2"></i>${s}</span>
+            <span class="text-[10px] text-gray-500">Node Suggestion</span>
+          </div>
+        `).join("");
+        document.getElementById("autocomplete-dropdown").classList.remove("hidden");
+      } else {
+        hideAutocomplete();
+      }
+    }
+
+    function hideAutocomplete() {
+      document.getElementById("autocomplete-dropdown").classList.add("hidden");
+    }
+
+    function clearSearchInput() {
+      document.getElementById("main-search-input").value = "";
+      document.getElementById("clear-btn").classList.add("hidden");
+      hideAutocomplete();
+    }
+
+    function resetToHome() {
+      document.getElementById("hero-section").classList.remove("hidden");
+      document.getElementById("results-section").classList.add("hidden");
+      document.getElementById("main-search-input").value = "";
+    }
+
+    /* Voice Search Simulation */
+    function triggerVoiceSearch() {
+      document.getElementById("voice-modal").classList.remove("hidden");
+    }
+    function closeVoiceModal() {
+      document.getElementById("voice-modal").classList.add("hidden");
+    }
+    function simulateVoiceQueryReceived() {
+      document.getElementById("voice-transcript").innerText = '"Quantum Computing..."';
+      setTimeout(() => {
+        closeVoiceModal();
+        quickSearch("Quantum Computing");
+      }, 800);
+    }
+
+    /* Command Palette Shortcuts */
+    function toggleCommandPalette() {
+      const modal = document.getElementById("cmd-palette-modal");
+      modal.classList.toggle("hidden");
+      if (!modal.classList.contains("hidden")) {
+        document.getElementById("cmd-input").focus();
+      }
+    }
+    function handleCmdKeydown(e) {
+      if (e.key === "Escape") toggleCommandPalette();
+    }
+    function cmdExecute(action) {
+      toggleCommandPalette();
+      if (action === 'search-ai') quickSearch('Artificial Intelligence');
+      else if (action === 'mode-code') setEngineMode('code');
+      else if (action === 'clear-bookmarks') clearAllBookmarks();
+      else if (action === 'system-reset') resetToHome();
+    }
+
+    /* Keyboard Shortcuts Global Listener */
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+    });
+
+    function handleSearchKeydown(e) {
+      if (e.key === "Enter") executeSearch();
+    }
+    function handleCompactSearchKeydown(e) {
+      if (e.key === "Enter") executeSearchFromCompact();
+    }
+
+    /* Bookmarks Manager */
+    function toggleBookmarkDrawer() {
+      document.getElementById("bookmark-drawer").classList.toggle("hidden");
+      renderBookmarks();
+    }
+
+    function saveBookmark(title, url) {
+      if (!bookmarks.some(b => b.url === url)) {
+        bookmarks.push({ title, url, time: new Date().toLocaleTimeString() });
+        localStorage.setItem("nexus_bookmarks", JSON.stringify(bookmarks));
+        updateBookmarkBadge();
+        showToast("Node Bookmarked!");
+      } else {
+        showToast("Already in Bookmarks");
+      }
+    }
+
+    function renderBookmarks() {
+      const list = document.getElementById("bookmark-list");
+      const badge = document.getElementById("bookmark-badge");
+      document.getElementById("bookmark-count-text").innerText = `${bookmarks.length} saved items`;
+
+      if (bookmarks.length === 0) {
+        list.innerHTML = `<p class="text-gray-500 text-center py-8">No saved vectors yet.</p>`;
+        return;
+      }
+
+      list.innerHTML = bookmarks.map((b, i) => `
+        <div class="p-3 rounded-xl bg-slate-900 border border-cyan-500/20 flex items-center justify-between">
+          <div class="truncate max-w-[200px]">
+            <p class="font-bold text-white text-xs truncate">${b.title}</p>
+            <p class="text-[10px] text-cyan-400 truncate">${b.url}</p>
+          </div>
+          <button onclick="removeBookmark(${i})" class="text-red-400 hover:text-red-300 p-1">
+            <i class="fa-solid fa-trash text-xs"></i>
+          </button>
+        </div>
+      `).join("");
+    }
+
+    function removeBookmark(index) {
+      bookmarks.splice(index, 1);
+      localStorage.setItem("nexus_bookmarks", JSON.stringify(bookmarks));
+      renderBookmarks();
+      updateBookmarkBadge();
+    }
+
+    function clearAllBookmarks() {
+      bookmarks = [];
+      localStorage.setItem("nexus_bookmarks", JSON.stringify(bookmarks));
+      renderBookmarks();
+      updateBookmarkBadge();
+      showToast("All Bookmarks Cleared");
+    }
+
+    function updateBookmarkBadge() {
+      const badge = document.getElementById("bookmark-badge");
+      if (bookmarks.length > 0) {
+        badge.innerText = bookmarks.length;
+        badge.classList.remove("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+
+    /* Search History Manager */
+    function toggleHistoryDrawer() {
+      document.getElementById("history-drawer").classList.toggle("hidden");
+      renderHistory();
+    }
+
+    function addToHistory(query) {
+      if (!searchHistory.includes(query)) {
+        searchHistory.unshift(query);
+        if (searchHistory.length > 15) searchHistory.pop();
+        localStorage.setItem("nexus_history", JSON.stringify(searchHistory));
+      }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById("history-list");
+      if (searchHistory.length === 0) {
+        list.innerHTML = `<p class="text-gray-500 text-center py-8">History empty.</p>`;
+        return;
+      }
+      list.innerHTML = searchHistory.map(q => `
+        <div onclick="quickSearch('${q}'); toggleHistoryDrawer();" class="p-2.5 rounded-lg bg-slate-900/60 hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-300 cursor-pointer flex justify-between items-center">
+          <span><i class="fa-solid fa-clock-rotate-left text-cyan-500/60 mr-2"></i>${q}</span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-gray-600"></i>
+        </div>
+      `).join("");
+    }
+
+    function clearSearchHistory() {
+      searchHistory = [];
+      localStorage.setItem("nexus_history", JSON.stringify([]));
+      renderHistory();
+      showToast("History Cleared");
+    }
+
+    /* Live Preview Modal */
+    function openPreviewModal(title, snippet, url) {
+      document.getElementById("preview-modal-title").innerText = title;
+      document.getElementById("preview-body-heading").innerText = title;
+      document.getElementById("preview-body-text").innerText = snippet + " Extended synthetic preview buffer verified through Quantum Mirror node.";
+      document.getElementById("preview-modal-link").href = url;
+      document.getElementById("preview-modal").classList.remove("hidden");
+    }
+    function closePreviewModal() {
+      document.getElementById("preview-modal").classList.add("hidden");
+    }
+
+    /* Copy & Utility Actions */
+    function copyAISummary() {
+      const text = document.getElementById("ai-summary-text").innerText;
+      copyToClipboard(text);
+    }
+
+    function copyCodeSnippet() {
+      const code = document.getElementById("code-snippet-body").innerText;
+      copyToClipboard(code);
+    }
+
+    function copyToClipboard(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast("Copied to Clipboard!");
+    }
+
+    function speakAISummary() {
+      const text = document.getElementById("ai-summary-text").innerText;
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.pitch = 1.0;
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+        showToast("Synthesizing Audio Output...");
+      } else {
+        showToast("Speech Synthesis Not Supported");
+      }
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "glass-panel px-4 py-2.5 rounded-xl border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-xl animate-bounce";
+      toast.innerHTML = `<i class="fa-solid fa-circle-check text-cyan-400 mr-2"></i>${msg}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    /* Initialize on Window Load */
+    window.onload = function() {
+      initCanvas();
+      animateCanvas();
+      updateBookmarkBadge();
+    };
+  </script>
+</body>
+</html>
